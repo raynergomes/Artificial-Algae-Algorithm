@@ -1,12 +1,8 @@
 import numpy as np
-from Sphere import ObjVal
-from CalculateGreatness import CalculateGreatness
-from GreatnessOrder import GreatnessOrder
-from FrictionSurface import FrictionSurface
-from tournement_selection import tournement_selection
+#from TestFunctions import ObjVal
+from HelperFunctions import *
 
-
-def AAA(MaxFEVs, N, D, LB, UB, K, le, Ap):
+def AAA(MaxFEVs, N, D, LB, UB, K, le, Ap, ObjVal):
     Algae = np.zeros((N,D))
     # Xij = Ximin + (Ximax - Ximin) * random(0, 1)
     Algae = LB + (UB - LB) * np.random.rand(N, D)
@@ -16,19 +12,14 @@ def AAA(MaxFEVs, N, D, LB, UB, K, le, Ap):
     Obj_Algae = []
 
     Best_Algae = np.zeros((1, N))
+    Obj_Algae = ObjVal(Algae)
 
-    for i in range(1, N):
-        Obj_Algae = ObjVal(Algae)
-
-    # [value,indices] = np.min(Obj_Algae)
     min_Obj_Alg = np.min(Obj_Algae)
-    for ii, vi in enumerate((Obj_Algae),start=0):
-        if vi == min_Obj_Alg:
-            indices = ii
-            value = vi
+    indices = np.argmin(Obj_Algae)
+
 
     Best_Algae = Algae[indices, :]
-    Obj_Best_Algae = value
+    Obj_Best_Algae = min_Obj_Alg
 
     Big_Algae = CalculateGreatness(Big_Algae, Obj_Algae)
 
@@ -45,7 +36,7 @@ def AAA(MaxFEVs, N, D, LB, UB, K, le, Ap):
 
             starve = 0
 
-            while Cloro_ALG[:,39] >= 0 and c < MaxFEVs:
+            while Cloro_ALG[:,N-1] >= 0 and c < MaxFEVs:
 
                 Neighbor = tournement_selection(Obj_Algae)
 
@@ -98,38 +89,24 @@ def AAA(MaxFEVs, N, D, LB, UB, K, le, Ap):
         if starve == 0:
             Starve[:,i] = Starve[:,i] + 1
 
-        #[val, ind] = np.min(Obj_Algae)
-
         min_Obj_Alg1 = np.min(Obj_Algae)
-        for ju, valuee in enumerate((Obj_Algae), start=0):
-            if valuee == min_Obj_Alg1:
-                ind = ju
-                valki = valuee
+        ind = np.argmin(Obj_Algae)
 
-        if valki < Obj_Best_Algae:
+        if min_Obj_Alg1 < Obj_Best_Algae:
             Best_Algae = Algae[ind, :]
-            Obj_Best_Algae = valki
+            Obj_Best_Algae = min_Obj_Alg1
 
         Big_Algae = CalculateGreatness(Big_Algae, Obj_Algae)
 
-        m = np.int(np.fix(np.random.random() * D) + 1)
         imax = np.max(Big_Algae)
         imin = np.min(Big_Algae)
 
-        big_algae_to_1_arr = np.array(Big_Algae).reshape(N)
-        #Algae[imin, m] = Algae[imax, m]
+        index_max = np.argmax(Big_Algae)
+        index_min = np.argmin(Big_Algae)
 
-        for ind_max, max_value in enumerate((big_algae_to_1_arr),start=0):
-            if max_value == imax:
-                index_max = ind_max
-                maxi_value = max_value
-
-        for ind_min, min_value in enumerate((big_algae_to_1_arr),start=0):
-            if min_value == imin:
-                index_min = ind_min
-                mini_value = min_value
-        if m >= 40:
-            m = m - 1;
+        m = np.int(np.fix(np.random.random() * D) + 1)
+        if m >= D:
+            m = m - 1
 
         Algae[index_min, m] = Algae[index_max, m]
 
@@ -138,7 +115,5 @@ def AAA(MaxFEVs, N, D, LB, UB, K, le, Ap):
         if np.random.random() < Ap:
             for m in range(0,D):
                 Algae[starve, m] = Algae[starve, m] + (Algae[index_max, m] - Algae[starve, m]) * np.random.random()
-
-        print('Run = %d error = %1.8e\n' %(counter, Obj_Best_Algae))
 
     return Obj_Best_Algae
